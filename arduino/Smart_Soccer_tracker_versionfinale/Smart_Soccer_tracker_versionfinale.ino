@@ -21,14 +21,13 @@ String currentFilename = "";  // Nom du fichier en cours
 double lastLat = 0.0, lastLon = 0.0;
 double totalDistance = 0.0;
 
-// --- Variables pour nouvelles fonctionnalités ---
 double maxSpeed = 0.0;
 int sprintCount = 0;
 bool sprintActive = false;
 
-double sprintThreshold = 14.0; // km/h pour football
-double runThreshold = 7.0;     // km/h
-double walkThreshold = 0.5;    // km/h
+double sprintThreshold = 14.0;
+double runThreshold = 7.0;
+double walkThreshold = 0.5;
 
 unsigned long sprintDuration = 0;
 unsigned long runDuration = 0;
@@ -36,7 +35,6 @@ unsigned long walkDuration = 0;
 unsigned long gameStartTime = 0;
 unsigned long lastMillis = 0;
 
-// --- Distances par type de mouvement ---
 double sprintDistance = 0.0;
 double runDistance = 0.0;
 double walkDistance = 0.0;
@@ -56,17 +54,22 @@ void setup() {
     Serial.println("❌ Carte SD non initialisée !");
   } else {
     Serial.println("✅ Carte SD initialisée.");
+    
+    // --- Créer dossier gps_logs si inexistant ---
+    if (!SD.exists("/gps_logs")) {
+      SD.mkdir("/gps_logs");
+      Serial.println("📂 Dossier gps_logs créé");
+    }
   }
 
   gameStartTime = millis();
   lastMillis = millis();
 }
 
-// --- Fonction pour gérer le fichier du jour ---
 void updateLogFile() {
   if (gps.date.isValid()) {
-    char filename[20];
-    sprintf(filename, "/%04d-%02d-%02d.txt",
+    char filename[40];
+    sprintf(filename, "/gps_logs/%04d-%02d-%02d.txt",
             gps.date.year(),
             gps.date.month(),
             gps.date.day());
@@ -79,7 +82,6 @@ void updateLogFile() {
         Serial.print("📁 Nouveau fichier ouvert : ");
         Serial.println(currentFilename);
 
-        // En-tête CSV si fichier neuf
         if (logFile.size() == 0) {
           logFile.println("lat,lon,alt,speed_kmph,speed_mps,sats,hdop,deltaDistance,totalDistance,maxSpeed,sprintCount,sprintDuration,runDuration,walkDuration,gameTime,sprintDistance,runDistance,walkDistance,time,date");
           logFile.flush();
@@ -95,13 +97,12 @@ void loop() {
   while (gpsSerial.available()) gps.encode(gpsSerial.read());
   webSocket.loop();
 
-  if (millis() - lastSend > 500) { // 2 Hz
+  if (millis() - lastSend > 500) {
     lastSend = millis();
 
     if (gps.location.isUpdated()) {
       if (!gps.hdop.isValid() || !gps.satellites.isValid()) return;
 
-      // --- Gérer fichier du jour ---
       updateLogFile();
 
       double currentLat = gps.location.lat();
@@ -112,14 +113,12 @@ void loop() {
       double speedKmph = gps.speed.kmph();
       double deltaDistance = 0.0;
 
-      // Calcul distance
       if (lastLat != 0.0 && lastLon != 0.0) {
         double dist = TinyGPSPlus::distanceBetween(lastLat, lastLon, currentLat, currentLon);
         if (sats >= 5 && hdopVal <= 3.0 && dist > 0.6 && dist <= 10.0) {
           totalDistance += dist;
           deltaDistance = dist;
 
-          // Ajout aux bonnes catégories
           if (speedKmph >= sprintThreshold) {
             sprintDistance += dist;
           } else if (speedKmph >= runThreshold && speedKmph < sprintThreshold) {
@@ -133,52 +132,34 @@ void loop() {
       lastLat = currentLat;
       lastLon = currentLon;
 
-      // --- Vitesse max ---
       if (speedKmph > maxSpeed) maxSpeed = speedKmph;
 
-      // --- Type de mouvement et durées ---
       unsigned long currentMillis = millis();
       unsigned long dt = currentMillis - lastMillis;
       lastMillis = currentMillis;
 
-      // Sprint
       if (speedKmph >= sprintThreshold) {
         if (!sprintActive) {
           sprintActive = true;
           sprintCount++;
         }
         sprintDuration += dt;
-      } else {
-        sprintActive = false;
-      }
+      } else sprintActive = false;
 
-      // Course
-      if (speedKmph >= runThreshold && speedKmph < sprintThreshold) {
-        runDuration += dt;
-      }
+      if (speedKmph >= runThreshold && speedKmph < sprintThreshold) runDuration += dt;
+      if (speedKmph >= walkThreshold && speedKmph < runThreshold) walkDuration += dt;
 
-      // Marche
-      if (speedKmph >= walkThreshold && speedKmph < runThreshold) {
-        walkDuration += dt;
-      }
-
-      // Temps de jeu total
       unsigned long gameTime = currentMillis - gameStartTime;
 
-      // --- Conversion des durées en minutes et secondes ---
       unsigned long sprintMin = (sprintDuration / 1000) / 60;
       unsigned long sprintSec = (sprintDuration / 1000) % 60;
-
       unsigned long runMin = (runDuration / 1000) / 60;
       unsigned long runSec = (runDuration / 1000) % 60;
-
       unsigned long walkMin = (walkDuration / 1000) / 60;
       unsigned long walkSec = (walkDuration / 1000) % 60;
-
       unsigned long gameMin = (gameTime / 1000) / 60;
       unsigned long gameSec = (gameTime / 1000) % 60;
 
-      // --- JSON ---
       String json = "{";
       json += "\"lat\":" + String(currentLat, 6) + ",";
       json += "\"lon\":" + String(currentLon, 6) + ",";
@@ -205,7 +186,6 @@ void loop() {
       Serial.println(json);
       webSocket.broadcastTXT(json);
 
-      // --- Écriture SD ---
       if (logFile) {
         logFile.print(String(currentLat, 6) + ",");
         logFile.print(String(currentLon, 6) + ",");
