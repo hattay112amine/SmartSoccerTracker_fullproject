@@ -3,36 +3,30 @@ import { View, StyleSheet } from "react-native";
 import { TextInput, Button, Text } from "react-native-paper";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
-import { account } from "../../services/appwrite.js";
+import { account, client } from "../../services/appwrite.js";
 
 export default function SigninScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSignin = async () => {
+const handleSignin = async () => {
+  try {
+    // Supprimer la session Appwrite actuelle si existante
     try {
-      // Vérifier si une session est déjà active
-      const currentSession = await account.getSession("current").catch(() => null);
-
-      if (currentSession) {
-        console.log("Session déjà active:", currentSession);
-        navigation.replace("MainTabs"); // Aller directement dans l'app
-        return;
-      }
-
-      // Sinon supprimer toutes les anciennes sessions (sécurité)
-      await account.deleteSessions();
-
-      // Créer une nouvelle session avec email + mot de passe
-      const session = await account.createEmailPasswordSession(email, password);
-      console.log("Nouvelle session créée:", session);
-      navigation.replace("MainTabs");
+      await account.deleteSession("current");
     } catch (err) {
-      console.log("Erreur de connexion:", err);
-      setError(err.message);
+      console.log("Pas de session existante, ok");
     }
-  };
+
+    // Créer une nouvelle session
+    await account.createEmailPasswordSession(email, password);
+    navigation.replace("MainTabs");
+  } catch (err) {
+    console.log("❌ Erreur de connexion:", err);
+    setError(err.message);
+  }
+};
 
   return (
     <View style={styles.container}>

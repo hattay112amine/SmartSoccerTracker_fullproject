@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { CardsProvider } from "../screens/CardsContext.js"; // <-- importer le contexte
+import { CardsProvider } from "../screens/CardsContext.js"; 
 import SigninScreen from "../screens/SigninScreen";
 import SignupScreen from "../screens/SignupScreen";
 import SessionsScreen from "../screens/ActivityScreen";   // 📌 Activité

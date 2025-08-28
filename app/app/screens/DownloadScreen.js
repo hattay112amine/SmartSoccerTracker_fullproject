@@ -1,4 +1,5 @@
 import React, { useState, useContext } from "react";
+import { ThemeContext } from "./ThemeContext";
 import {
   View,
   Text,
@@ -20,6 +21,9 @@ export default function DownloadScreen() {
   const [folderUri, setFolderUri] = useState(null);
   const [loading, setLoading] = useState(false);
   const [folderSize, setFolderSize] = useState(0);
+  const { theme } = useContext(ThemeContext);
+  const bgColor = theme === "dark" ? "#111" : "#fff";
+  const textColor = theme === "dark" ? "#fff" : "#111";
 
   const chooseFolder = async () => {
     try {
@@ -201,6 +205,7 @@ export default function DownloadScreen() {
       </ScrollView>
     </ImageBackground>
   );
+
 }
 
 const styles = StyleSheet.create({

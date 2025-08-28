@@ -12,7 +12,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.amine1hattay.smartSoccerTrackerApp"
     },
     "android": {
       "adaptiveIcon": {
@@ -20,10 +21,25 @@
         "backgroundColor": "#ffffff"
       },
       "jsEngine": "jsc",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.amine1hattay.smart_soccer_trackerapp",
+      "versionCode": 1,
+      "permissions": []
     },
     "web": {
       "favicon": "./app/assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "df4cb4f9-3b61-44a5-ab20-58da043adca2"
+      },
+      "appwrite": {
+        "endpoint": "standard_13b8686322c02fc863705b87a83264af1db3f088d84dfed1534846001b1789ddb36beddd4008d1bae61dea194564512cfc6ce2367f034d8437e87920aade75b7a9a3f1a80be1833573988336212647d2abde5b241c0d8060a26e2ca5fd2b3d334e128f2e4e5d7e55415faa36cee851f84806099cce6a0fc32cc1fc43f8812866",
+        "projectId": "df4cb4f9-3b61-44a5-ab20-58da043adca2"
+      }
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }

@@ -158,7 +158,7 @@ export default function ActivityDetailScreen({ route }) {
           <SkiaText
             x={0}
             y={y + 4}
-            text={(i * yStepValue).toFixed(1)}
+           text={((i * yStepValue).toFixed(1))}
             font={font}
             color="white"
           />

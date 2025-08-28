@@ -1,4 +1,5 @@
 import React, { useContext, useState } from "react";
+import { ThemeContext } from "./ThemeContext.js";
 import {
   View,
   Text,
@@ -13,6 +14,10 @@ import { CardsContext } from "./CardsContext";
 
 export default function ActivityScreen() {
   const { cards, finalStats } = useContext(CardsContext);
+  const { theme } = useContext(ThemeContext);
+  const bgColor = theme === "dark" ? "#111" : "#fff";
+  const textColor = theme === "dark" ? "#fff" : "#111";
+
   const navigation = useNavigation();
 
   const [selectedDate, setSelectedDate] = useState("all");
